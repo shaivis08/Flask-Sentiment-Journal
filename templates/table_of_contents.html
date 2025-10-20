@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+<h2 class="content-title">Index</h2>
+<ul class="index">
+      {% for entry in entries %}
+      <li>
+        <a href="{{url_for('entry',id=entry.id)}}">
+          {{ entry.date_created.strftime('%b %d, %Y') }}
+           - {{ entry.content | truncate(50, True) }} 
+        </a>
+        <hr>
+      </li>
+      {% endfor %}
+</ul>
+<div class="navigation-buttons">
+    
+    <a href="{{ url_for('create') }}" class="button-new-entry">
+        Write a New Entry &plus;
+    </a>
+    
+    
+    {% if first_entry_id is not none %}
+        <a href="{{ url_for('entry', id=first_entry_id) }}" class="button-first-entry">
+            Go to First Entry &rightarrow;
+        </a>
+        
+        {% else %}
+        <span class="disabled-nav"> No Entries Yet 📖 </span>
+    {% endif %}
+
+</div>
+      
+{% endblock %}

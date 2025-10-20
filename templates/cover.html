@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
+{% endblock %}
+{% block body %}
+<div class="cover">
+    <h2 class="cover-title">The Mind's Archive</h2>
+</div>
+<div class="navigation">
+<form method="GET" action="{{ url_for('contents') }}">
+            <button type="submit"> &rightarrow; </button>
+</form>
+</div>
+
+{% endblock %}

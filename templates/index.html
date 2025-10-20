@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
+{% endblock %}
+
+{% block body %}
+<div class="main-content">
+<div class="sidebar">
+    <ul class="entry-list">
+      <h3 class="sidebar-title">Past Entries</h3>
+      {% for entry in entries %}
+      <li>
+        <form class='delete' action='/delete/{{entry.id}}'>
+        <a href="{{url_for('entry',id=entry.id)}}">
+          {{ entry.date_created.strftime('%b %d, %Y') }}
+           - {{ entry.content | truncate(50, True) }} 
+        </a>
+        <div class="bin">
+        <button type="submit">🗑️</button>
+        </div>
+        </form>
+        <hr>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+ <form action="{{url_for('add')}}" method="POST" style="text-align: right;">
+   <div class="page">
+    <textarea name="content" id="content" rows="50" cols="100"></textarea>
+   </div>
+   
+    <input type="submit" value="Submit">
+ </form>
+ </div>
+
+{% endblock %}

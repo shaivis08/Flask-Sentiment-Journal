@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+
+{% endblock %}
+{% block body %}
+<h1>Journal Analysis</h1>
+<div class="link-box">
+    <a href="{{url_for('contents')}}">← Journal Log</a>
+</div>
+<div class="analysis-page-layout"> 
+    
+    <div class="analysis-card-container">
+    
+    <div class="analysis-card">
+        <ol>
+            <li>Mood: {{ entry_to_analyse.mood_label }}</li>
+            
+            <li>Polarity Score: {{ entry_to_analyse.sentiment_score | round(4) }}</li>
+            
+            <li>Subjectivity Score: {{ entry_to_analyse.subjectivity_score | round(4) }}</li>
+            
+            <li>Date/Time: {{ entry_to_analyse.date_created.strftime('%b %d, %Y') }}</li>
+        </ol>
+        <div class="mood-battery-container">
+    {% set score = entry_to_analyse.sentiment_score %}
+    
+    {% set fill_percent = ((score + 1) * 50) | int %}
+    
+    <div class="battery-casing">
+        <div class="battery-cap"></div>
+        <div class="battery-fill" style="width: {{ fill_percent | string + '%' | safe }};"></div>
+    </div>
+    <span class="battery-label">{{ fill_percent }}%</span>
+</div>
+        <form action="{{ url_for('update', id=entry_to_analyse.id) }}" method="GET">
+           <input type="submit" value="Update">
+        </form>
+    </div>
+</div>
+<div class="journal-page-container">
+        <div class="entry-page">
+            {{ entry_to_analyse.content }}
+        </div>
+    </div>
+</div>
+
+<div class="navigation">
+    {% if previous_id is not none %}
+        <form method="GET" action="{{ url_for('entry', id=previous_id) }}">
+            <button type="submit"> &leftarrow; </button>
+        </form>
+    {% else %}
+        <span class="disabled-nav left-arrow"> &leftarrow; </span> 
+    {% endif %}
+
+    {% if next_id is not none %}
+        <form method="GET" action="{{ url_for('entry', id=next_id) }}">
+            <button type="submit"> &rightarrow; </button>
+        </form>
+    {% else %}
+        <span class="disabled-nav right-arrow"> &rightarrow; </span>
+    {% endif %}
+    
+</div>
+{% endblock %}
