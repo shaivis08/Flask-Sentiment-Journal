@@ -4,55 +4,58 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
+
 {% block body %}
 <h1>Journal Analysis</h1>
+
 <div class="link-box">
     <a href="{{url_for('contents')}}">← Journal Log</a>
 </div>
+
 <div class="analysis-page-layout"> 
     
     <div class="analysis-card-container">
-    
-    <div class="analysis-card">
-        <ol>
-            <li>Mood: {{ entry_to_analyse.mood_label }}</li>
-            <li>Total Score: {{ entry_to_analyse.compound_score }}</li>
-            
-            <li>Positivity: {{ entry_to_analyse.pos_score }}</li>
-            <li>Neutrality: {{ entry_to_analyse.neu_score  }}</li>
-            
-            <li>Negativity: {{ entry_to_analyse.subjectivity_score }}</li>
-            
-            <li>Date/Time: {{ entry_to_analyse.date_created.strftime('%b %d, %Y') }}</li>
-        </ol>
-        <div class="mood-battery-container">
-    {% set score = entry_to_analyse.compound_score %}
-    
-    {% set fill_percent = ((score + 1) * 50) | int %}
-    
-    <div class="battery-casing">
-        <div class="battery-cap"></div>
-        <div class="battery-fill" style="width: {{ fill_percent | string + '%' | safe }};"></div>
+        <div class="analysis-card">
+            <ol>
+                <li>Mood: {{ entry_to_analyse.mood_label }}</li>
+                <li>Total Score: {{ entry_to_analyse.compound_score }}</li>
+                <li>Positivity: {{ entry_to_analyse.pos_score }}</li>
+                <li>Neutrality: {{ entry_to_analyse.neu_score }}</li>
+                <li>Negativity: {{ entry_to_analyse.neg_score }}</li>
+                <li>Date/Time: {{ entry_to_analyse.date_created.strftime('%b %d, %Y') }}</li>
+            </ol>
+
+            <div class="mood-battery-container">
+                {% set score = entry_to_analyse.compound_score %}
+                {% set fill_percent = ((score + 1) * 50) | int %}
+                <div class="battery-casing">
+                    <div class="battery-cap"></div>
+                    <div class="battery-fill" style="width: {{ fill_percent }}%;"></div>
+                </div>
+                <span class="battery-label">{{ fill_percent }}%</span>
+            </div>
+
+            <form action="{{ url_for('update', id=entry_to_analyse.id) }}" method="GET">
+               <input type="submit" value="Update">
+            </form>
+        </div>
+
+        <div class="analysis-card sentiment_chart" style="margin-top: 20px; padding: 15px;">
+            <h3 style="font-family: 'Merriweather', serif; font-size: 1.1rem; text-align: center;">Sentiment Arc</h3>
+            <canvas id="sentiment-chart" 
+                    data-scores='{{ arc_data | tojson }}' 
+                    data-pivot='{{ pivotIndex }}'>
+            </canvas>
+        </div>
     </div>
-    <span class="battery-label">{{ fill_percent }}%</span>
-</div>
-        <form action="{{ url_for('update', id=entry_to_analyse.id) }}" method="GET">
-           <input type="submit" value="Update">
-        </form>
-    </div>
-</div>
-<div class="journal-page-container">
+
+    <div class="journal-page-container">
         <div class="entry-page">
             {{ entry_to_analyse.content }}
         </div>
     </div>
-</div>
-<div class = "sentiment chart">
-    <script>
-        const Arc_Data = {{ arc_data | tojson}}
-    </script>
 </div>
 
 <div class="navigation">
@@ -71,12 +74,11 @@
     {% else %}
         <span class="disabled-nav right-arrow"> &rightarrow; </span>
     {% endif %}
-    <form action="{{url_for('weekly_chart')}}", method = "GET">
-  <button>
-    Mood Chart
-  </button>
- </form>
 
-    
+    <form action="{{url_for('weekly_chart')}}" method="GET">
+        <button type="submit">Mood Chart</button>
+    </form>
 </div>
+
+<script src="{{ url_for('static', filename='js/chart_logic.js') }}"></script>
 {% endblock %}

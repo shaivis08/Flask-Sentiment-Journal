@@ -8,7 +8,7 @@ from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
 from spellchecker import SpellChecker
 
-
+nltk.download('stopwords')
 lemmatizer = WordNetLemmatizer()
 wordnet_map = {"N":wordnet.NOUN, "V":wordnet.VERB, "J":wordnet.ADJ, "R": wordnet.ADV}
 spell = SpellChecker()
@@ -17,7 +17,7 @@ spell = SpellChecker()
 def lower_case(text):
     return text.lower()
 def remove_punctuations(text):
-    punctuations = string.punctuations
+    punctuations = string.punctuation
     return text.translate(str.maketrans('','',punctuations))
 def remove_stopwords(text):
     STOPWORDS = set(stopwords.words('english'))
@@ -32,11 +32,13 @@ def lemmatized_words(text):
     pos_text = pos_tag(text.split())
     return " ".join([lemmatizer.lemmatize(word,wordnet_map.get(pos[0], wordnet.NOUN)) for word, pos in pos_text])
 def correct_spellings(text):
+    if (text==""):
+        return ""
     corrected_text = []
     misspelled_text = spell.unknown(text.split())
     for word in text.split():
-        if word in misspelled_text:
-            corrected_text.append(spell.correction(word))
+        if word in misspelled_text and spell.correction(word)!=None: 
+             corrected_text.append(spell.correction(word))
         else:
             corrected_text.append(word)
     return " ".join(corrected_text)

@@ -310,7 +310,10 @@ h1{
 .analysis-card-container {
     flex: 0 0 35%; 
     padding-right: 20px; 
-    
+    /* Changed to flex-column to stack the Stats and the Chart */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* This creates a clean space between the two cards */
     min-height: 70vh; 
 }
 
@@ -318,9 +321,6 @@ h1{
     flex: 1 1 65%; 
     min-height: 70vh; 
 }
-
-
-
 
 .analysis-card {
     padding: 20px;
@@ -330,6 +330,12 @@ h1{
     
     font-family: 'Merriweather', serif;
     color: #444;
+}
+
+/* Specific styling for the sentiment chart card */
+.sentiment_chart {
+    /* Inherits everything from .analysis-card, just adding specific padding for the graph */
+    padding: 15px;
 }
 
 .analysis-card ol {
@@ -343,15 +349,17 @@ h1{
     margin-bottom: 5px;
 }
 
-
 .analysis-card form {
-    
     width: auto;
     margin: 30px 0 0 0;
     text-align: left;
 }
 
-
+/* Optional: Ensure the canvas doesn't overflow its card */
+#sentiment-chart {
+    max-width: 100%;
+    height: auto !important;
+}
 .journal-page-container .entry-page {
     
     width: 100%;

@@ -103,12 +103,12 @@ def add():
     journal_entry=request.form['content']
     compound, compound_score, pos_score, neg_score, neu_score = sentiment(journal_entry)
     label = analysis(compound_score, pos_score, neg_score, neu_score)
-    modified = lower_case(journal_entry)
-    modified = remove_punctuations(modified)
-    modified = remove_stopwords(modified)
-    modified = correct_spellings(modified)
-    modified = lemmatized_words(modified)
-    signal = signal_extraction(modified)
+    modified_1 = lower_case(journal_entry)
+    modified_2 = remove_punctuations(modified_1)
+    modified_3 = remove_stopwords(modified_2)
+    modified_4 = correct_spellings(modified_3)
+    modified_5 = lemmatized_words(modified_4)
+    signal = signal_extraction(modified_5)
     new=Journal(content=journal_entry,compound_score=compound_score,pos_score=pos_score,neu_score=neu_score,neg_score=neg_score,compound=json.dumps(compound),mood_label=label, signals = json.dumps(signal))
 
     try:
@@ -122,26 +122,36 @@ def add():
     
 @app.route('/entry/<int:id>')
 def entry(id):
-    entry_to_analyse=Journal.query.get_or_404(id)
+    entry_to_analyse = Journal.query.get_or_404(id)
+    raw_compound = entry_to_analyse.compound
 
-    previous_entry=Journal.query.filter(Journal.id>id).order_by(Journal.id.asc()).first()
-    next_entry=Journal.query.filter(Journal.id<id).order_by(Journal.id.desc()).first()
+    if raw_compound and raw_compound != "[]":
+     scores = json.loads(raw_compound)
+     mean = entry_to_analyse.compound_score
+     if (max(scores) - mean > mean - min(scores)):
+        pivot = scores.index(max(scores))
+     else:
+        pivot = scores.index(min(scores))
+    else:
+     scores = [0, 0] 
+     pivot = 0
+     mean = entry_to_analyse.compound_score
 
-    previous_id=previous_entry.id if previous_entry else None
-    next_id=next_entry.id if next_entry else None
+    previous_entry = Journal.query.filter(Journal.id > id).order_by(Journal.id.asc()).first()
+    next_entry = Journal.query.filter(Journal.id < id).order_by(Journal.id.desc()).first()
 
-    return render_template('entry_detail.html',entry_to_analyse=entry_to_analyse,previous_id=previous_id,next_id=next_id)
-def sentiment_arc(id):
-   entry_to_analyse = Journal.query.get_or_404(id)
-   scores = json.loads(entry_to_analyse.compound)
-   mean = entry_to_analyse.compound_score
-   delta = scores[0] - scores[-1]
-   if (scores.max()-mean > mean-scores.min()):
-      pivot = scores.max()
-   else:
-      pivot = scores.min()
-   return render_template('entry_detail.html', arc_data = scores, pivot = pivot)
-   
+    previous_id = previous_entry.id if previous_entry else None
+    next_id = next_entry.id if next_entry else None
+    print(f"DEBUG: First score: {scores[0]}, Last score: {scores[-1]}")
+    return render_template(
+        'entry_detail.html',
+        entry_to_analyse=entry_to_analyse,
+        previous_id=previous_id,
+        next_id=next_id,
+        arc_data=scores,      
+        pivotIndex=pivot      
+    )
+
 @app.route('/delete/<int:id>')
 def delete(id):
     entry_to_delete=Journal.query.get_or_404(id)
