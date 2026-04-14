@@ -18,15 +18,17 @@
     <div class="analysis-card">
         <ol>
             <li>Mood: {{ entry_to_analyse.mood_label }}</li>
+            <li>Total Score: {{ entry_to_analyse.compound_score }}</li>
             
-            <li>Polarity Score: {{ entry_to_analyse.sentiment_score | round(4) }}</li>
+            <li>Positivity: {{ entry_to_analyse.pos_score }}</li>
+            <li>Neutrality: {{ entry_to_analyse.neu_score  }}</li>
             
-            <li>Subjectivity Score: {{ entry_to_analyse.subjectivity_score | round(4) }}</li>
+            <li>Negativity: {{ entry_to_analyse.subjectivity_score }}</li>
             
             <li>Date/Time: {{ entry_to_analyse.date_created.strftime('%b %d, %Y') }}</li>
         </ol>
         <div class="mood-battery-container">
-    {% set score = entry_to_analyse.sentiment_score %}
+    {% set score = entry_to_analyse.compound_score %}
     
     {% set fill_percent = ((score + 1) * 50) | int %}
     
@@ -47,6 +49,11 @@
         </div>
     </div>
 </div>
+<div class = "sentiment chart">
+    <script>
+        const Arc_Data = {{ arc_data | tojson}}
+    </script>
+</div>
 
 <div class="navigation">
     {% if previous_id is not none %}
@@ -64,6 +71,12 @@
     {% else %}
         <span class="disabled-nav right-arrow"> &rightarrow; </span>
     {% endif %}
+    <form action="{{url_for('weekly_chart')}}", method = "GET">
+  <button>
+    Mood Chart
+  </button>
+ </form>
+
     
 </div>
 {% endblock %}

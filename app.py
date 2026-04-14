@@ -1,52 +1,80 @@
-
-from flask import Flask, render_template, request, redirect, url_for, abort
+from flask import Flask, render_template, request, redirect, url_for, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from textblob import TextBlob 
+from text_utils import lower_case, remove_punctuations, remove_stopwords, lemmatized_words, correct_spellings, signal_extraction
+from datetime import datetime, timedelta
+from nltk.sentiment import SentimentIntensityAnalyzer
+from nltk.tokenize import sent_tokenize
+import json
+import nltk
+nltk.download('vader_lexicon')
 
 app=Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///./test.db'
 db=SQLAlchemy(app)
+sia = SentimentIntensityAnalyzer()
 
 class Journal(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     userid=db.Column(db.String(50))
     content=db.Column(db.Text,nullable=False)
     date_created=db.Column(db.DateTime,default=datetime.utcnow)
-    sentiment_score=db.Column(db.Float,nullable=False)
-    mood_label=db.Column(db.String(15),nullable=False)
-    subjectivity_score=db.Column(db.Float,nullable=False)
+    mood_label=db.Column(db.String(15))
+    pos_score=db.Column(db.Float)
+    neg_score=db.Column(db.Float)
+    neu_score=db.Column(db.Float)
+    compound_score=db.Column(db.Float)
+    signals = db.Column(db.String)
+    compound = db.Column(db.String)
 
 with app.app_context():
     db.create_all()
     if not Journal.query.first():
-        sample=Journal(userid="ABC",content='I had a good day yesterday',sentiment_score=0.8,mood_label='Happy',subjectivity_score=0.9)
+        sample=Journal(userid="ABC",content='I had a good day yesterday',compound_score=0.4404,mood_label='Happy',pos_score=0.444, neg_score = 0.0, neu_score=0.556)
         db.session.add(sample)
         db.session.commit()
 
+def sentiment(text):
+   tokens = sent_tokenize(text)
+   if not tokens: return [0], 0, 0, 0, 1
+   compound = []
+   pos = []
+   neg = []
+   neu = []
+   for i in tokens:
+       scores = sia.polarity_scores(i)
+       compound.append(scores['compound'])
+       pos.append(scores['pos'])
+       neg.append(scores['neg'])
+       neu.append(scores['neu'])
+   compound_score = sum(compound)/len(compound)
+   pos_score = sum(pos)/len(pos)
+   neg_score = sum(neg)/len(neg)
+   neu_score = sum(neu)/len(neu)
 
-def analysis(text):
-    blob=TextBlob(text)
-    
-    sentiment_score=blob.sentiment.polarity
-    subjectivity_score=blob.sentiment.subjectivity
-    
-    if sentiment_score>=0.81:
-        mood_label='EUPHORIC'
-    elif sentiment_score>=0.51:
-        mood_label='JOYFUL'
-    elif sentiment_score>=0.21:
-        mood_label='CONTENT'
-    elif sentiment_score>=-0.20:
-        mood_label='NEUTRAL'
-    elif sentiment_score>=-0.50:
-        mood_label='ANXIOUS'
-    elif sentiment_score>=-0.80:
-        mood_label='SAD'
-    else:
-        mood_label='FRUSTRATED'
-    
-    return sentiment_score,mood_label,subjectivity_score
+   return compound, compound_score, pos_score, neg_score, neu_score
+   
+
+def analysis(compound_score, pos_score, neg_score, neu_score):
+   if (compound_score>=0.85) and pos_score>0.6:
+    mood_label='EUPHORIC'
+   elif (compound_score>=0.45 and compound_score<0.85) and pos_score>neg_score*3:
+    mood_label='JOYFUL'
+   elif (compound_score>=0.15 and compound_score<0.45) and neu_score>0.5:
+    mood_label='CONTENT'
+   elif (compound_score>=-0.15 and compound_score<0.15) and neu_score>0.8:
+    mood_label='NEUTRAL'
+   elif (compound_score>=-0.45 and compound_score<-0.15) and neg_score>pos_score:
+    mood_label='ANXIOUS'
+   elif (compound_score>=-0.85 and compound_score<-0.45) and neg_score>0.4:
+    mood_label='SAD'
+   elif (compound_score<-0.85) and neg_score>0.7:
+    mood_label='FRUSTRATED'
+   else:
+      mood_label = 'UNCERTAIN'
+
+   return mood_label
+
 
 @app.route('/')
 def index():
@@ -73,8 +101,15 @@ def create():
 @app.route('/add',methods=['POST'])
 def add():
     journal_entry=request.form['content']
-    score,label,subjectivity=analysis(journal_entry)
-    new=Journal(content=journal_entry,sentiment_score=score,mood_label=label,subjectivity_score=subjectivity)
+    compound, compound_score, pos_score, neg_score, neu_score = sentiment(journal_entry)
+    label = analysis(compound_score, pos_score, neg_score, neu_score)
+    modified = lower_case(journal_entry)
+    modified = remove_punctuations(modified)
+    modified = remove_stopwords(modified)
+    modified = correct_spellings(modified)
+    modified = lemmatized_words(modified)
+    signal = signal_extraction(modified)
+    new=Journal(content=journal_entry,compound_score=compound_score,pos_score=pos_score,neu_score=neu_score,neg_score=neg_score,compound=json.dumps(compound),mood_label=label, signals = json.dumps(signal))
 
     try:
         db.session.add(new)
@@ -96,9 +131,17 @@ def entry(id):
     next_id=next_entry.id if next_entry else None
 
     return render_template('entry_detail.html',entry_to_analyse=entry_to_analyse,previous_id=previous_id,next_id=next_id)
-    
-
-
+def sentiment_arc(id):
+   entry_to_analyse = Journal.query.get_or_404(id)
+   scores = json.loads(entry_to_analyse.compound)
+   mean = entry_to_analyse.compound_score
+   delta = scores[0] - scores[-1]
+   if (scores.max()-mean > mean-scores.min()):
+      pivot = scores.max()
+   else:
+      pivot = scores.min()
+   return render_template('entry_detail.html', arc_data = scores, pivot = pivot)
+   
 @app.route('/delete/<int:id>')
 def delete(id):
     entry_to_delete=Journal.query.get_or_404(id)
@@ -125,6 +168,28 @@ def update(id):
     
     else:
         return render_template('update.html',entry_to_update=entry_to_update)
+    
+
+@app.route('/mood_chart',methods=['POST','GET'])
+def weekly_chart():
+    scores = []
+    dates = []
+    entries = Journal.query.order_by(Journal.date_created.asc()).limit(7).all()
+    for entry in entries:
+        scores.append(entry.compound_score)
+        dates.append(entry.date_created.strftime("%d %b"))
+    chart_data = {
+        "labels": dates,
+        "sentiment": scores
+    }
+    return render_template('dashboard.html', data=chart_data)
+def day_chart():
+    scores = []
+    days = ['Monday','Tuesday','Wednesday','Thursday','Friday', 'Saturday', 'Sunday']
+
+
+
+
     
 
 
