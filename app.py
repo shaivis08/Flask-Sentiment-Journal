@@ -184,7 +184,7 @@ def update(id):
 def weekly_chart():
     scores = []
     dates = []
-    entries = Journal.query.order_by(Journal.date_created.asc()).limit(7).all()
+    entries = Journal.query.order_by(Journal.date_created.asc()).all()
     for entry in entries:
         scores.append(entry.compound_score)
         dates.append(entry.date_created.strftime("%d %b"))
@@ -192,18 +192,32 @@ def weekly_chart():
         "labels": dates,
         "sentiment": scores
     }
-    return render_template('dashboard.html', data=chart_data)
-def day_chart():
-    scores = []
     days = ['Monday','Tuesday','Wednesday','Thursday','Friday', 'Saturday', 'Sunday']
-
-
-
-
+    mon, tue, wed, thur, fri, sat, sun = [],[],[],[],[],[],[]
+    for entry in entries:
+       if (entry.date_created.strftime("%A").upper() == "MONDAY" ):
+          mon.append(entry.compound_score)
+       elif (entry.date_created.strftime("%A").upper() == "TUESDAY" ):
+          tue.append(entry.compound_score)
+       elif (entry.date_created.strftime("%A").upper() == "WEDNESDAY" ):
+          wed.append(entry.compound_score)
+       elif (entry.date_created.strftime("%A").upper() == "THURSDAY" ):
+          thur.append(entry.compound_score)
+       elif (entry.date_created.strftime("%A").upper() == "FRIDAY" ):
+          fri.append(entry.compound_score)
+       elif (entry.date_created.strftime("%A").upper() == "SATURDAY" ):
+          sat.append(entry.compound_score)
+       elif (entry.date_created.strftime("%A").upper() == "SUNDAY" ):
+          sun.append(entry.compound_score)
+    day_scores = [mon, tue, wed, thur, fri, sat, sun]
+    weekly = [sum(i)/len(i) if len(i)!=0 else 0 for i in day_scores]
+    patterns = {
+                "weekly_scores" : weekly,
+                "labels" : days
+               }
     
+    return render_template('dashboard.html', data=chart_data, pattern_chart = patterns)
 
-
-    
 
 
 if __name__ == '__main__':
