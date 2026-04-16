@@ -85,3 +85,65 @@ new Chart(ctx, {
         }
     }
 });
+
+const context1 = document.getElementById('dayChart').getContext('2d');
+const label = dayData.labels
+const data = dayData.weekly_scores
+new Chart (context1, {
+    type: 'bar',
+    data: {
+        labels: label,
+        datasets: [{
+            label: 'Your Weekly Mood Trend',
+            data: data,
+            backgroundColor: 
+                function(context) {
+                    const value = context.dataset.data[context.dataIndex];
+                    return value > 0 ? '#88ab75': '#d18a7a'; 
+                },
+            borderColor: function(context) {
+                    const value = context.dataset.data[context.dataIndex];
+                    return value > 0 ? '#88ab75': '#d18a7a'; 
+                },
+            borderWidth: function(context) {
+                    const value = context.dataset.data[context.dataIndex];
+                    return value === 0 ? 3 : 1; 
+                },
+            borderDash: function(context) {
+                   const value = context.dataset.data[context.dataIndex];
+                   return value === 0 ? [5, 5] : []; 
+                },
+            borderRadius: 10
+        }],
+    },
+    options: {
+            responsive: true,
+            scales: {
+            x: {
+            grid: {
+                lineWidth: 2,        
+                color: '#4a4a4a'     
+            },
+            border: {
+                width: 3            
+            }
+        },
+            y: {
+                grid: {
+                   color: function(context) {
+                if (context.tick.value === 0) {
+                   return '#000000'; 
+                }
+               return 'rgba(0, 0, 0, 0.1)'; 
+            },
+    lineWidth: function(context) {
+        return context.tick.value === 0 ? 3 : 1; 
+    }
+            },
+             beginAtZero: false,
+                min: -1,
+                max: 1
+            }
+    }
+    },
+})

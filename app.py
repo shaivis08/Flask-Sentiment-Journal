@@ -210,7 +210,8 @@ def weekly_chart():
        elif (entry.date_created.strftime("%A").upper() == "SUNDAY" ):
           sun.append(entry.compound_score)
     day_scores = [mon, tue, wed, thur, fri, sat, sun]
-    weekly = [sum(i)/len(i) if len(i)!=0 else 0 for i in day_scores]
+    #weekly = [sum(i)/len(i) if len(i)!=0 else 0 for i in day_scores]
+    weekly = [0.5, -0.2, 0.8, 0, 0.4, -0.1, 0.6]
     patterns = {
                 "weekly_scores" : weekly,
                 "labels" : days
