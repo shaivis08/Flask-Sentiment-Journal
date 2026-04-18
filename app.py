@@ -26,6 +26,7 @@ class Journal(db.Model):
     compound_score=db.Column(db.Float)
     signals = db.Column(db.String)
     compound = db.Column(db.String)
+    is_processed = db.Column(db.Boolean)
 
 with app.app_context():
     db.create_all()

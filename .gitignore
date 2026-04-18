@@ -1,4 +1,7 @@
-.DS_Store
-.DS_Store
-.DS_Store
+.env
+.venv/
+env/
+__pycache__/
+*.db
+instance/
 .DS_Store
