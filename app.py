@@ -16,7 +16,6 @@ nltk.download('vader_lexicon')
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel('gemini-1.5-flash')
-client = genai.Client()
 app=Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///./test.db'
