@@ -49,7 +49,7 @@ def signal_extraction(text):
     tags = pos_tag(L)
     for word, tag in tags:
         if tag in ['NN','NNS','NNP','NNPS','VB','VBD','VBG','VBN','VBP','VBZ','JJ','JJR','JJS']:
-            extracted.append(word)
+            extracted.append(word.lower())
     extracted = list(set(extracted))
     return extracted
 def tokenise(text):
