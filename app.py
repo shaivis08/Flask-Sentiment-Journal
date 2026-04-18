@@ -7,9 +7,18 @@ from nltk.sentiment import SentimentIntensityAnalyzer
 from nltk.tokenize import sent_tokenize
 import json
 import nltk
+import os
+from dotenv import load_dotenv
+import google.generativeai as genai
+from pattern_utils import pattern
 nltk.download('vader_lexicon')
 
+load_dotenv()
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel('gemini-1.5-flash')
+client = genai.Client()
 app=Flask(__name__)
+
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///./test.db'
 db=SQLAlchemy(app)
 sia = SentimentIntensityAnalyzer()
@@ -225,6 +234,98 @@ def weekly_chart():
     
     return render_template('dashboard.html', data=chart_data, pattern_chart = patterns)
 
+@app.route('/daily_insight/<int:id>',methods=['POST','GET'])
+def daily_insights(id):
+   entry_for_insight = Journal.query.get_or_404(id)
+   compound = json.loads(entry_for_insight.compound)
+   if not compound:
+       return render_template('daily_insight.html', insight="Your metamorphosis is just beginning. Write today's entry and get insights!")
+   data_snapshot = json.dumps({
+    "sentence_scores": compound,
+    "entry_text": entry_for_insight.content, # Optional: helps AI see the 'why'
+    "overall_sentiment": entry_for_insight.compound_score 
+}, indent=2)
+
+   prompt = f"""
+SYSTEM ROLE:
+You are the "Metamorphosis Mentor." Your task is to provide a brief, soulful reflection 
+on the user's single journal entry for today. You focus on the "micro-rhythms" of their 
+thoughts and offer a single "seed of growth."
+
+DATA CONTEXT:
+1. 'sentence_scores': This is a chronological list of scores for every sentence in the entry. 
+   - A sequence like [0.5, -0.1, 0.8] shows a "recovery" arc.
+   - A sequence like [0.8, 0.2, -0.5] shows a "downward" emotional shift.
+
+TODAY'S DATA:
+{data_snapshot}
+
+INSTRUCTIONS:
+- OBSERVE THE ARC: Identify the emotional flow of the day. Did they start heavy and end light, or vice-versa? 
+- CHOOSE A MOMENT: Reference a specific feeling or shift indicated by the sentence scores.
+- THE GROWTH SEED: Suggest one tiny, actionable reflection or task for tomorrow that aligns with today's vibe.
+- TONE: Encouraging, short, and "Boho-Academia." Use imagery like "ink," "roots," "stars," or "light."
+
+OUTPUT FORMAT:
+Provide exactly 3 to 4 sentences. It should feel like a quick note left on a desk.
+"""
+   try:
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    response = model.generate_content(prompt)
+    daily_reflection = response.text
+   except Exception as e:
+    daily_reflection = "Today's ink is still drying. Take a breath and reflect on your own progress for a moment."
+
+   return render_template('daily_insight.html', insight=daily_reflection)
+   
+      
+
+@app.route('/weekly_insight',methods=['POST','GET'])
+def weekly_insights():
+   model = genai.GenerativeModel('gemini-1.5-flash')
+   stats = pattern()
+   chart_data, patterns = get_mood_stats()
+   if not stats or len(stats.get('top_triggers', [])) == 0:
+        return render_template('weekly_insight.html', insight="Your metamorphosis is just beginning. Write a few more entries to unlock weekly patterns!")
+   
+   full_context = {
+    "chronological_trend": chart_data,  # Dates and scores in order
+    "day_of_week_averages": patterns,    # Monday-Sunday averages
+    "linguistic_patterns": stats  #  triggers and hapaxes
+}
+   data_snapshot = json.dumps(full_context, indent=2)
+
+   prompt = f"""
+SYSTEM ROLE:
+You are the "Metamorphosis Mentor," a deeply observant and intellectually curious companion 
+for a user documenting their life in a digital journal. You don't just see numbers; you see 
+an evolving story of a developer and creative mind.
+
+DATA SCHEMA & CONTEXT:
+1. 'chronological_trend': A timeline of the user's mood. Look for sharp dips or peaks across specific dates.
+2. 'day_of_week_averages': The user's typical emotional baseline for each day (e.g., are Mondays consistently lower?).
+3. 'positive/negative_triggers': The top keywords associated with emotional shifts.
+4. 'unique_pos' (Hapaxes): Rare "seeds of growth" mentioned only once this week—high-value breakthroughs.
+
+THE WEEKLY DATA SNAPSHOT:
+{data_snapshot}
+
+INSTRUCTIONS FOR THE ANALYSIS:
+- SYNTHESIS: Compare a specific date from 'chronological_trend' with the 'negative_triggers.' If a dip happened, explain it through the words the user used.
+- DAY PATTERNS: Mention if their current week is breaking or following their typical 'day_of_week_averages' (e.g., "Surprisingly, your Tuesday was vibrant despite it usually being a heavier day for you").
+- MILESTONE: Select ONE word from 'unique_pos' and celebrate it as a sign of their metamorphosis.
+- TONE: Warmly observant, "Boho-Academia" vibes—think of a mentor in a library filled with plants and codebooks. 
+- AVOID: Generic "AI slop" or corporate buzzwords.
+
+OUTPUT FORMAT:
+Provide a single, cohesive paragraph of 6 to 8 sentences. The reflection should feel like a short, personal letter.
+"""
+
+   try:
+        response = model.generate_content(prompt)
+        return render_template('weekly_insight.html', insight=response.text)
+   except Exception as e:
+        return render_template('weekly_insight.html', insight="The AI is resting right now. Try again in a moment!")
 
 
 if __name__ == '__main__':
