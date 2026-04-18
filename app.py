@@ -155,6 +155,12 @@ def get_mood_stats():
                 "weekly_scores" : weekly,
                 "labels" : days
                }
+    for entry in entries:
+        if not entry.is_processed:
+            entry.is_processed = True
+    
+    db.session.commit() 
+
     return chart_data, patterns
     
 
