@@ -15,7 +15,7 @@ nltk.download('vader_lexicon')
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-3-flash-preview')
 app=Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI']='sqlite:///./test.db'
@@ -311,19 +311,20 @@ OUTPUT FORMAT:
 Provide exactly 3 to 4 sentences. It should feel like a quick note left on a desk.
 """
    try:
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-3-flash-preview')
     response = model.generate_content(prompt)
     daily_reflection = response.text
    except Exception as e:
+    print(f"DEBUG ERROR: {e}")
     daily_reflection = "Today's ink is still drying. Take a breath and reflect on your own progress for a moment."
 
-   return render_template('daily_insight.html', insight=daily_reflection)
+   return render_template('daily_insights.html', insight=daily_reflection, entry_for_insight = entry_for_insight)
    
       
 
 @app.route('/weekly_insight',methods=['POST','GET'])
 def weekly_insights():
-   model = genai.GenerativeModel('gemini-1.5-flash')
+   
    stats = pattern()
    chart_data, patterns = get_mood_stats()
    if not stats or len(stats.get('top_triggers', [])) == 0:

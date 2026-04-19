@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block body %}
+<h1>Daily Insight by AI</h1>
+<div class="insight-container">
+    
+    <div class="mentor-note">
+        <p>{{ insight }}</p>
+    </div>
+    
+    <a href="{{ url_for('weekly_chart') }}">Back to Dashboard</a>
+</div>
+
+{% endblock %}

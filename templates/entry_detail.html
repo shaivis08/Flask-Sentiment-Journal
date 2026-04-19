@@ -74,10 +74,17 @@
     {% else %}
         <span class="disabled-nav right-arrow"> &rightarrow; </span>
     {% endif %}
+    <form action="{{ url_for('daily_insights', id=entry_to_analyse.id) }}" method="GET">
+    <button type="submit" class="btn-mentor">Get Daily Insight</button>
+    </form>
 
     <form action="{{url_for('weekly_chart')}}" method="GET">
         <button type="submit">Mood Chart</button>
     </form>
+    <form action="{{url_for('weekly_insights')}}" method="GET">
+        <button type="submit" class="btn-mentor">Get Weekly Insight</button>
+    </form>
+
 </div>
 
 <script src="{{ url_for('static', filename='js/chart_logic.js') }}"></script>
