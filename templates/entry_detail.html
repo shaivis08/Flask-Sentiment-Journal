@@ -58,33 +58,36 @@
     </div>
 </div>
 
-<div class="navigation">
+<div class="nav-zone left">
     {% if previous_id is not none %}
-        <form method="GET" action="{{ url_for('entry', id=previous_id) }}">
-            <button type="submit"> &leftarrow; </button>
-        </form>
+        <a href="{{ url_for('entry', id=previous_id) }}" class="page-arrow">&leftarrow;</a>
     {% else %}
-        <span class="disabled-nav left-arrow"> &leftarrow; </span> 
+        <span class="page-arrow disabled">&leftarrow;</span> 
     {% endif %}
+</div>
 
-    {% if next_id is not none %}
-        <form method="GET" action="{{ url_for('entry', id=next_id) }}">
-            <button type="submit"> &rightarrow; </button>
-        </form>
+<div class="action-toolbelt">
+    {% if entry_to_analyse.content|length > 10 %}
+     <form action="{{ url_for('daily_insights', id=entry_to_analyse.id) }}" method="GET" onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').innerHTML='Thinking...';">
+        <button type="submit" class="btn-tool">Daily Insight</button>
+     </form>
     {% else %}
-        <span class="disabled-nav right-arrow"> &rightarrow; </span>
+    <p class="small-note italic">Write a bit more to unlock AI insights!</p>
     {% endif %}
-    <form action="{{ url_for('daily_insights', id=entry_to_analyse.id) }}" method="GET">
-    <button type="submit" class="btn-mentor">Get Daily Insight</button>
-    </form>
-
     <form action="{{url_for('weekly_chart')}}" method="GET">
-        <button type="submit">Mood Chart</button>
+        <button type="submit" class="btn-tool">Mood Chart</button>
     </form>
     <form action="{{url_for('weekly_insights')}}" method="GET">
-        <button type="submit" class="btn-mentor">Get Weekly Insight</button>
+        <button type="submit" class="btn-tool">Weekly Insight</button>
     </form>
+</div>
 
+<div class="nav-zone right">
+    {% if next_id is not none %}
+        <a href="{{ url_for('entry', id=next_id) }}" class="page-arrow">&rightarrow;</a>
+    {% else %}
+        <span class="page-arrow disabled">&rightarrow;</span>
+    {% endif %}
 </div>
 
 <script src="{{ url_for('static', filename='js/chart_logic.js') }}"></script>

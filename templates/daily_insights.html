@@ -1,22 +1,29 @@
 {% extends "base.html" %}
 
 {% block head %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block body %}
-<h1>Daily Insight by AI</h1>
-<div class="insight-container">
-    <h2>Daily Bud: {{ entry_for_insight.date_created.strftime('%A, %d %b') }}</h2>
-    
-    <div class="mentor-note">
-        <p>{{ insight }}</p>
-    </div>
-    
-    <a href="{{ url_for('weekly_chart') }}">Back to Dashboard</a>
-</div>
+<div class="insight-page-wrapper">
+    <header class="insight-header">
+        <h1>Daily Insight</h1>
+        <p class="date-subtitle">{{ entry_for_insight.date_created.strftime('%A, %d %B %Y') }}</p>
+    </header>
 
+    <div class="insight-card">
+        <div class="card-decoration"></div>
+        <div class="mentor-note">
+            <h2 class="insight-title">The Daily Bud</h2>
+            <div class="insight-text">
+                {{ insight|safe }}
+            </div>
+        </div>
+        
+        <div class="action-footer">
+            <a href="{{ url_for('contents') }}" class="btn-back">
+                &larr; Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
 {% endblock %}

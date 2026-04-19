@@ -278,9 +278,11 @@ def weekly_chart():
 @app.route('/daily_insight/<int:id>',methods=['POST','GET'])
 def daily_insights(id):
    entry_for_insight = Journal.query.get_or_404(id)
-   compound = json.loads(entry_for_insight.compound)
-   if not compound:
-       return render_template('daily_insight.html', insight="Your metamorphosis is just beginning. Write today's entry and get insights!")
+   if entry_for_insight.compound:
+     compound = json.loads(entry_for_insight.compound)
+   else:
+    compound = [0.0]
+   
    data_snapshot = json.dumps({
     "sentence_scores": compound,
     "entry_text": entry_for_insight.content, # Optional: helps AI see the 'why'
